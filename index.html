@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Hello, World!</title>
+  <script>
+    window.onload = function() {
+      var text = "Hello, World!";
+      var index = 0;
+      var container = document.getElementById("container");
+
+      function displayLetter() {
+        if (index < text.length) {
+          container.innerHTML += text.charAt(index);
+          index++;
+          setTimeout(displayLetter, 1000); // 1000 milliseconds = 1 second
+        }
+      }
+
+      displayLetter();
+    };
+  </script>
+</head>
+<body>
+  <div id="container"></div>
+  <p>With love from Sachin Frayne</p>
+</body>
+</html>
