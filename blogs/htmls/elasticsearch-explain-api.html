@@ -1,0 +1,330 @@
+<h2
+id="do-you-want-to-understand-why-your-documents-got-those-scores">Do
+you want to understand why your documents got those scores?</h2>
+<h3 id="documents">Documents</h3>
+<p>Let’s go through the Explain API with a set of example documents. In
+my case I am going to use a small list of movie quotes.</p>
+<pre><code>POST _bulk
+{ &quot;index&quot; : { &quot;_index&quot; : &quot;movie_quotes&quot; } }
+{ &quot;title&quot; : &quot;The Incredibles&quot;, &quot;quote&quot;: &quot;Never look back, darling. It distracts from the now&quot; }
+{ &quot;index&quot; : { &quot;_index&quot; : &quot;movie_quotes&quot; } }
+{ &quot;title&quot; : &quot;The Lion King&quot;, &quot;quote&quot;: &quot;Oh yes, the past can hurt. But, you can either run from it or learn from it&quot; }
+{ &quot;index&quot; : { &quot;_index&quot; : &quot;movie_quotes&quot; } }
+{ &quot;title&quot; : &quot;Toy Story&quot;, &quot;quote&quot;: &quot;To infinity and beyond&quot; }
+{ &quot;index&quot; : { &quot;_index&quot; : &quot;movie_quotes&quot; } }
+{ &quot;title&quot; : &quot;Ratatouille&quot;, &quot;quote&quot;: &quot;You must not let anyone define your limits because of where you come from&quot; }
+{ &quot;index&quot; : { &quot;_index&quot; : &quot;movie_quotes&quot; } }
+{ &quot;title&quot; : &quot;Lilo and Stitch&quot;, &quot;quote&quot;: &quot;Ohana means family, family means nobody gets left behind. Or forgotten&quot; }</code></pre>
+<h3 id="bm25">BM25</h3>
+<p>The <a href="https://en.wikipedia.org/wiki/Okapi_BM25">BM25
+algorithm</a>, the default algorithm for scoring in elasticsearch.</p>
+<p><span class="math display">\[score = \frac{boost \times freq \times
+log(1 + \frac{(N - n + 0.5)}{(n + 0.5)})}{(freq + k1 * (1 - b + b *
+\frac{dl}{avgdl}))}\]</span></p>
+<ul>
+<li><code>boost</code> - constant 2.2 = <code>(k1 + 1)</code>, ignore,
+not relevant for ordering</li>
+<li><code>freq</code> - the number of times this term appears in the
+field</li>
+<li><code>N</code> - the total number of documents in the shard</li>
+<li><code>n</code> - the number of documents that contain this term</li>
+<li><code>k1</code> - constant 1.2, term saturation parameter, can be
+changed</li>
+<li><code>b</code> - constant 0.75, length normalization parameter, can
+be changed</li>
+<li><code>dl</code> - length of the field, specifically the number of
+terms in the field</li>
+<li><code>avgdl</code> - the average length of this field for every
+document in the cluster</li>
+</ul>
+<h3 id="example-1-fields-with-less-terms-are-more-important.">Example 1:
+Fields with less terms are more important.</h3>
+<pre><code>GET movie_quotes/_search
+{
+  &quot;explain&quot;: true,
+  &quot;query&quot;: {
+    &quot;match&quot;: {
+      &quot;quote&quot;: &quot;the&quot;
+    }
+  }
+}</code></pre>
+<h4 id="response">Response</h4>
+<pre><code>{
+  &quot;took&quot;: 1,
+  &quot;timed_out&quot;: false,
+  &quot;_shards&quot;: {
+    &quot;total&quot;: 1,
+    &quot;successful&quot;: 1,
+    &quot;skipped&quot;: 0,
+    &quot;failed&quot;: 0
+  },
+  &quot;hits&quot;: {
+    &quot;total&quot;: {
+      &quot;value&quot;: 2,
+      &quot;relation&quot;: &quot;eq&quot;
+    },
+    &quot;max_score&quot;: 0.94581884,
+    &quot;hits&quot;: [
+      {
+        &quot;_shard&quot;: &quot;[movie_quotes][0]&quot;,
+        &quot;_node&quot;: &quot;M9Dx5c1BTk6ehVVSCiJAvQ&quot;,
+        &quot;_index&quot;: &quot;movie_quotes&quot;,
+        &quot;_id&quot;: &quot;LMpi64YBn8MlrX4RQHf9&quot;,
+        &quot;_score&quot;: 0.94581884,
+        &quot;_source&quot;: {
+          &quot;title&quot;: &quot;The Incredibles&quot;,
+          &quot;quote&quot;: &quot;Never look back, darling. It distracts from the now&quot;
+        },
+        &quot;_explanation&quot;: {
+          &quot;value&quot;: 0.94581884,
+          &quot;description&quot;: &quot;weight(quote:the in 0) [PerFieldSimilarity], result of:&quot;,
+          &quot;details&quot;: [
+            {
+              &quot;value&quot;: 0.94581884,
+              &quot;description&quot;: &quot;score(freq=1.0), computed as boost * idf * tf from:&quot;,
+              &quot;details&quot;: [
+                {
+                  &quot;value&quot;: 2.2,
+                  &quot;description&quot;: &quot;boost&quot;,
+                  &quot;details&quot;: []
+                },
+                {
+                  &quot;value&quot;: 0.87546873,
+                  &quot;description&quot;: &quot;idf, computed as log(1 + (N - n + 0.5) / (n + 0.5)) from:&quot;,
+                  &quot;details&quot;: [
+                    {
+                      &quot;value&quot;: 2,
+                      &quot;description&quot;: &quot;n, number of documents containing term&quot;,
+                      &quot;details&quot;: []
+                    },
+                    {
+                      &quot;value&quot;: 5,
+                      &quot;description&quot;: &quot;N, total number of documents with field&quot;,
+                      &quot;details&quot;: []
+                    }
+                  ]
+                },
+                {
+                  &quot;value&quot;: 0.4910714,
+                  &quot;description&quot;: &quot;tf, computed as freq / (freq + k1 * (1 - b + b * dl / avgdl)) from:&quot;,
+                  &quot;details&quot;: [
+                    {
+                      &quot;value&quot;: 1,
+                      &quot;description&quot;: &quot;freq, occurrences of term within document&quot;,
+                      &quot;details&quot;: []
+                    },
+                    {
+                      &quot;value&quot;: 1.2,
+                      &quot;description&quot;: &quot;k1, term saturation parameter&quot;,
+                      &quot;details&quot;: []
+                    },
+                    {
+                      &quot;value&quot;: 0.75,
+                      &quot;description&quot;: &quot;b, length normalization parameter&quot;,
+                      &quot;details&quot;: []
+                    },
+                    {
+                      &quot;value&quot;: 9,
+                      &quot;description&quot;: &quot;dl, length of field&quot;,
+                      &quot;details&quot;: []
+                    },
+                    {
+                      &quot;value&quot;: 11,
+                      &quot;description&quot;: &quot;avgdl, average length of field&quot;,
+                      &quot;details&quot;: []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        &quot;_shard&quot;: &quot;[movie_quotes][0]&quot;,
+        &quot;_node&quot;: &quot;M9Dx5c1BTk6ehVVSCiJAvQ&quot;,
+        &quot;_index&quot;: &quot;movie_quotes&quot;,
+        &quot;_id&quot;: &quot;Lcpi64YBn8MlrX4RQHf9&quot;,
+        &quot;_score&quot;: 0.71575475,
+        &quot;_source&quot;: {
+          &quot;title&quot;: &quot;The Lion King&quot;,
+          &quot;quote&quot;: &quot;Oh yes, the past can hurt. But, you can either run from it or learn from it&quot;
+        },
+        &quot;_explanation&quot;: {
+          &quot;value&quot;: 0.71575475,
+          &quot;description&quot;: &quot;weight(quote:the in 1) [PerFieldSimilarity], result of:&quot;,
+          &quot;details&quot;: [
+            {
+              &quot;value&quot;: 0.71575475,
+              &quot;description&quot;: &quot;score(freq=1.0), computed as boost * idf * tf from:&quot;,
+              &quot;details&quot;: [
+                {
+                  &quot;value&quot;: 2.2,
+                  &quot;description&quot;: &quot;boost&quot;,
+                  &quot;details&quot;: []
+                },
+                {
+                  &quot;value&quot;: 0.87546873,
+                  &quot;description&quot;: &quot;idf, computed as log(1 + (N - n + 0.5) / (n + 0.5)) from:&quot;,
+                  &quot;details&quot;: [
+                    {
+                      &quot;value&quot;: 2,
+                      &quot;description&quot;: &quot;n, number of documents containing term&quot;,
+                      &quot;details&quot;: []
+                    },
+                    {
+                      &quot;value&quot;: 5,
+                      &quot;description&quot;: &quot;N, total number of documents with field&quot;,
+                      &quot;details&quot;: []
+                    }
+                  ]
+                },
+                {
+                  &quot;value&quot;: 0.3716216,
+                  &quot;description&quot;: &quot;tf, computed as freq / (freq + k1 * (1 - b + b * dl / avgdl)) from:&quot;,
+                  &quot;details&quot;: [
+                    {
+                      &quot;value&quot;: 1,
+                      &quot;description&quot;: &quot;freq, occurrences of term within document&quot;,
+                      &quot;details&quot;: []
+                    },
+                    {
+                      &quot;value&quot;: 1.2,
+                      &quot;description&quot;: &quot;k1, term saturation parameter&quot;,
+                      &quot;details&quot;: []
+                    },
+                    {
+                      &quot;value&quot;: 0.75,
+                      &quot;description&quot;: &quot;b, length normalization parameter&quot;,
+                      &quot;details&quot;: []
+                    },
+                    {
+                      &quot;value&quot;: 17,
+                      &quot;description&quot;: &quot;dl, length of field&quot;,
+                      &quot;details&quot;: []
+                    },
+                    {
+                      &quot;value&quot;: 11,
+                      &quot;description&quot;: &quot;avgdl, average length of field&quot;,
+                      &quot;details&quot;: []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}</code></pre>
+<h4 id="detailed-description">Detailed Description</h4>
+<p>For the document that came first, The Incredibles, we get the score
+<code>0.94581884</code>, calculated as follows:</p>
+<p><span class="math display">\[0.94581884 = \frac{2.2 \times 1 \times
+log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(1 + 1.2 * (1 - 0.75 + 0.75 *
+\frac{9}{11}))}\]</span></p>
+<p>For the second document, The Lion King, we get
+<code>0.71575475</code>, calculated as follows</p>
+<p><span class="math display">\[0.71575475 = \frac{2.2 \times 1 \times
+log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(1 + 1.2 * (1 - 0.75 + 0.75 *
+\frac{17}{11}))}\]</span></p>
+<p>For this example the equation is almost exactly the same, the only
+difference is in the second document, the field is longer by 2 terms,
+the algorithm has been designed in a way that means this document is
+less important because it has more terms in total. The reasoning behind
+this; the shorter the field that contains the term, the more real estate
+has been used for the term so it must be more valuable.</p>
+<h3
+id="example-2-higher-frequency-of-a-term-in-a-field-is-more-important.">Example
+2: Higher frequency of a term in a field is more important.</h3>
+<pre><code>GET movie_quotes/_search
+{
+  &quot;explain&quot;: true,
+  &quot;query&quot;: {
+    &quot;match&quot;: {
+      &quot;quote&quot;: &quot;you&quot;
+    }
+  }
+}</code></pre>
+<h4 id="detailed-description-1">Detailed Description</h4>
+<p>Skipping the full output this time, for the document that came first,
+Ratatouille, we get the score <code>1.1180129</code>, calculated as
+follows:</p>
+<p><span class="math display">\[1.1180129= \frac{2.2 \times 2 \times
+log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(2 + 1.2 * (1 - 0.75 + 0.75 *
+\frac{14}{11}))}\]</span></p>
+<p>For the second document, The Lion King, we get
+<code>0.71575475</code>, calculated as follows</p>
+<p><span class="math display">\[0.71575475 = \frac{2.2 \times 1 \times
+log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(1 + 1.2 * (1 - 0.75 + 0.75 *
+\frac{17}{11}))}\]</span></p>
+<p>For this example the equation is very similar again, but the
+documents have very different scores, more so than the shorter field
+example. The differences now are in frequency and field length, the
+field length in the first document is shorter, and the term frequency is
+higher, the field length is important to a point, but the frequency is
+more important up to a point, see next example. We also see that the
+second document has the same score as the first document in the previous
+example, this is because the circumstances are the same, the same
+frequency and the same field length, in fact it is the same
+document.</p>
+<h3 id="example-3-messing-with-the-algorithm">Example 3: Messing with
+the algorithm</h3>
+<p>If the term frequency is so important, can I just make sure my
+document always comes to the top by repeating the same term over and
+over?</p>
+<pre><code>POST _bulk
+{ &quot;index&quot; : { &quot;_index&quot; : &quot;movie_quotes&quot; } }
+{ &quot;title&quot; : &quot;Movie 1&quot;, &quot;quote&quot;: &quot;Movie movie movie movie.&quot; }
+{ &quot;index&quot; : { &quot;_index&quot; : &quot;movie_quotes&quot; } }
+{ &quot;title&quot; : &quot;Movie 2&quot;, &quot;quote&quot;: &quot;Movie movie movie movie movie movie movie movie.&quot; }</code></pre>
+<pre><code>GET movie_quotes/_search
+{
+  &quot;explain&quot;: true,
+  &quot;query&quot;: {
+    &quot;match&quot;: {
+      &quot;quote&quot;: &quot;movie&quot;
+    }
+  }
+}</code></pre>
+<h4 id="description">Description</h4>
+<p>For Movie 2, we get <code>2.2614799</code> and for Movie 1 we get
+<code>2.1889362</code>. These 2 scores are very similar now, the reason
+is that the <code>freq</code> is in the numerator and the denominator at
+first, as the frequency of the term increases the score boosts fast, but
+when the frequency gets to high, it becomes less and less relevant, even
+though the Movie 2 document has double the frequency of terms.</p>
+<h3 id="conclusion">Conclusion</h3>
+<p>These are short examples with a simple match query and we have not
+seen the interplay of every possible condition yet, but even so this is
+a good starting point to really get to grips with the scores that our
+documents get and to understand how to start tuning our documents to
+take advantage of this algorithm. It is necessary to mention and
+understand at this point that the exact value of the score is
+irrelevant, the relative score is the only thing useful for ordering.
+Some further examples to try out on your own;</p>
+<ul>
+<li>Really long fields that contain the term many times, less relevant
+than short fields with the term only a few times.</li>
+<li>Terms that appear in every document bringing too many documents
+back, like <code>the</code>, <code>an</code> or <code>a</code>, also
+called stop words. This sample set is too small to really see how stop
+words can really affect the number of documents returned.</li>
+<li>As this is a movie database, you might find a completely new set of
+stop words specific to movies, like <code>film</code>,
+<code>movie</code>, <code>flick</code>, <code>actor</code>,
+<code>camera</code> and so on. With a larger movie database you will
+find that searching for some of these terms will bring back results with
+the wrong relevance.</li>
+<li>Increasing the complexity of the query by adding more parameters to
+the request, like searching for multiple terms in multiple fields, or
+looking for the same term in multiple fields or looking for different
+terms in multiple fields.</li>
+<li>Begin exploring the different query types from the <a
+href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html">Elasticsearch
+Query DSL</a>, Especially the <a
+href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-bool-query.html">Boolean
+Query</a> which really starts to bring out the power of relevancy tuning
+in Elasticsearch.</li>
+</ul>
