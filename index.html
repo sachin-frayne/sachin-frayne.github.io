@@ -1,13 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+
 <head>
   <meta charset="UTF-8">
-  <title>Hello, World!</title>
+  <title>Sachin Frayne</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
 </head>
+
 <body>
-  <div id="container"></div>
-  <p>With love from Sachin Frayne</p>
-  <script src="js/script.js"></script>
+  <div id="title-container">
+    <a href="/" class="title-link">Sachin Frayne</a>
+  </div>
+  <br>
+  <!-- Generate the VS code to create all of the content in these divs, so that we don't get the index loading suddenly before the blog -->
+  <div class="intro-container">
+    <img src="images/me.jpg" alt="Sachin Frayne">
+    <div class="intro-text">
+      <p class="intro">Hi, I am Sachin Frayne, a Senior Elasticsearch Consultant/Support Engineer at <a
+          href="https://opster.com">Opster</a>.</p>
+      <p>I live in Spain near the <a href="https://es.wikipedia.org/wiki/Costa_de_la_Luz">Costa de la Luz</a>. But I am
+        originally from South Africa, I have also lived in Italy and England.</p>
+      <p>I built this site to blog about the things I learn, it was also as a chance to dabble in <a
+          href="https://chat.openai.com/">ChatGPT</a> and see what it can do. Future blog coming on this, (hint, I am not an expert in JavaScript, but neither is ChatGTP, ;))</p>
+    </div>
+  </div>
+  <div>========================================================================================</div>
+  <br>
+  <div class="blog-feed-container">
+    <div id="blog-feed"></div>
+  </div>
+  <div class="blog-container">
+    <div id="blog-content"></div>
+  </div>
+  <script type="module" src="js/index.js"></script>  
+
 </body>
+
 </html>
