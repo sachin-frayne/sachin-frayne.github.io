@@ -22,7 +22,7 @@ POST _bulk
 
 The [BM25 algorithm](https://en.wikipedia.org/wiki/Okapi_BM25), the default algorithm for scoring in elasticsearch.
 
-$$score = \frac{boost \times freq \times log(1 + \frac{(N - n + 0.5)}{(n + 0.5)})}{(freq + k1 * (1 - b + b * \frac{dl}{avgdl}))}$$
+$$score = \frac{boost \times freq \times log(1 + \frac{(N - n + 0.5)}{(n + 0.5)})}{(freq + k1 \times (1 - b + b \times \frac{dl}{avgdl}))}$$
 
 * `boost` - constant 2.2 = `(k1 + 1)`, ignore, not relevant for ordering
 * `freq` - the number of times this term appears in the field
@@ -225,11 +225,11 @@ GET movie_quotes/_search
 
 For the document that came first, The Incredibles, we get the score `0.94581884`, calculated as follows:
 
-$$0.94581884 = \frac{2.2 \times 1 \times log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(1 + 1.2 * (1 - 0.75 + 0.75 * \frac{9}{11}))}$$
+$$0.94581884 = \frac{2.2 \times 1 \times log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(1 + 1.2 \times (1 - 0.75 + 0.75 \times \frac{9}{11}))}$$
 
 For the second document, The Lion King, we get `0.71575475`, calculated as follows
 
-$$0.71575475 = \frac{2.2 \times 1 \times log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(1 + 1.2 * (1 - 0.75 + 0.75 * \frac{17}{11}))}$$
+$$0.71575475 = \frac{2.2 \times 1 \times log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(1 + 1.2 \times (1 - 0.75 + 0.75 \times \frac{17}{11}))}$$
 
 For this example the equation is almost exactly the same, the only difference is in the second document, the field is longer by 2 terms, the algorithm has been designed in a way that means this document is less important because it has more terms in total. The reasoning behind this; the shorter the field that contains the term, the more real estate has been used for the term so it must be more valuable.
 
@@ -251,11 +251,11 @@ GET movie_quotes/_search
 
 Skipping the full output this time, for the document that came first, Ratatouille, we get the score `1.1180129`, calculated as follows:
 
-$$1.1180129= \frac{2.2 \times 2 \times log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(2 + 1.2 * (1 - 0.75 + 0.75 * \frac{14}{11}))}$$
+$$1.1180129= \frac{2.2 \times 2 \times log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(2 + 1.2 \times (1 - 0.75 + 0.75 \times \frac{14}{11}))}$$
 
 For the second document, The Lion King, we get `0.71575475`, calculated as follows
 
-$$0.71575475 = \frac{2.2 \times 1 \times log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(1 + 1.2 * (1 - 0.75 + 0.75 * \frac{17}{11}))}$$
+$$0.71575475 = \frac{2.2 \times 1 \times log(1 + \frac{(5 - 2 + 0.5)}{(2 + 0.5)})}{(1 + 1.2 \times (1 - 0.75 + 0.75 \times \frac{17}{11}))}$$
 
 For this example the equation is very similar again, but the documents have very different scores, more so than the shorter field example. The differences now are in frequency and field length, the field length in the first document is shorter, and the term frequency is higher, the field length is important to a point, but the frequency is more important up to a point, see next example. We also see that the second document has the same score as the first document in the previous example, this is because the circumstances are the same, the same frequency and the same field length, in fact it is the same document.
 
