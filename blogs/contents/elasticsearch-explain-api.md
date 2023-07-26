@@ -4,7 +4,7 @@
 
 Let's go through the Explain API with a set of example documents. In my case I am going to use a small list of movie quotes.
 
-```
+```http
 POST _bulk
 { "index" : { "_index" : "movie_quotes" } }
 { "title" : "The Incredibles", "quote": "Never look back, darling. It distracts from the now" }
@@ -35,7 +35,7 @@ $$score = \frac{boost \times freq \times log(1 + \frac{(N - n + 0.5)}{(n + 0.5)}
 
 ### Example 1: Fields with less terms are more important.
 
-```
+```http
 GET movie_quotes/_search
 {
   "explain": true,
@@ -49,7 +49,7 @@ GET movie_quotes/_search
 
 #### Response
 
-```
+```json
 {
   "took": 1,
   "timed_out": false,
@@ -235,7 +235,7 @@ For this example the equation is almost exactly the same, the only difference is
 
 ### Example 2: Higher frequency of a term in a field is more important.
 
-```
+```http
 GET movie_quotes/_search
 {
   "explain": true,
@@ -263,7 +263,7 @@ For this example the equation is very similar again, but the documents have very
 
 If the term frequency is so important, can I just make sure my document always comes to the top by repeating the same term over and over?
 
-```
+```http
 POST _bulk
 { "index" : { "_index" : "movie_quotes" } }
 { "title" : "Movie 1", "quote": "Movie movie movie movie." }
@@ -271,7 +271,7 @@ POST _bulk
 { "title" : "Movie 2", "quote": "Movie movie movie movie movie movie movie movie." }
 ```
 
-```
+```http
 GET movie_quotes/_search
 {
   "explain": true,
